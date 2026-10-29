@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+<title>Work Tracker</title>
+<link rel="stylesheet" href="vendor/quill/quill.snow.css" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1><img class="app-logo" src="../../assets/logo.svg" alt="" width="22" height="22" />Work Tracker</h1>
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="todo">To Do</button>
+      <button class="tab-btn" data-tab="tasks">Tasks</button>
+      <button class="tab-btn" data-tab="activity">Activity</button>
+      <button class="tab-btn" data-tab="pomodoro">Pomodoro</button>
+      <button class="tab-btn" data-tab="settings">Settings</button>
+    </nav>
+    <div class="header-icons">
+      <button id="open-search-btn" class="icon-btn" title="Search" aria-label="Search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+      <button id="open-recyclebin-btn" class="icon-btn" title="Recycle Bin" aria-label="Recycle Bin">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+          <path d="M10 11v6"></path>
+          <path d="M14 11v6"></path>
+          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div id="reminder-banner" class="reminder-banner" hidden></div>
+
+  <section class="quick-add" id="quick-add-section">
+    <form id="quick-add-form">
+      <input type="text" id="qa-text" placeholder="What are you working on?" autocomplete="off" required />
+      <select id="qa-type"></select>
+      <input type="text" id="qa-ref" placeholder="Ticket / project ref (optional)" autocomplete="off" />
+      <select id="qa-priority"></select>
+      <input type="date" id="qa-due-date" title="Deadline (optional)" />
+      <input type="time" id="qa-due-time" title="Deadline time (optional; blank = end of day)" />
+      <button type="submit">Add</button>
+    </form>
+  </section>
+
+  <main>
+    <section id="tab-todo" class="tab-panel active">
+      <div class="panel-head">
+        <h2>To Do <span id="todo-count-label" class="day-summary"></span></h2>
+      </div>
+      <div id="todo-list" class="task-list"></div>
+
+      <hr id="todo-blocked-divider" class="section-divider" hidden />
+
+      <div id="todo-blocked-group" class="blocked-section" hidden>
+        <div class="panel-head blocked-head">
+          <h2>Blocked <span id="todo-blocked-count-label" class="day-summary"></span></h2>
+        </div>
+        <div id="blocked-list" class="task-list"></div>
+      </div>
+    </section>
+
+    <section id="tab-tasks" class="tab-panel">
+      <div class="panel-head">
+        <h2>All Tasks <span id="tasks-count-label" class="day-summary"></span></h2>
+        <div class="week-controls">
+          <button id="tasks-copy-btn">Copy as text</button>
+        </div>
+      </div>
+      <div id="tasks-content"></div>
+    </section>
+
+    <section id="tab-activity" class="tab-panel">
+      <div class="panel-head">
+        <div class="day-nav">
+          <button id="activity-prev-btn" class="secondary">&laquo; Prev day</button>
+          <h2 id="activity-date-heading"></h2>
+          <button id="activity-next-btn" class="secondary">Next day &raquo;</button>
+        </div>
+        <div class="week-controls">
+          <button id="activity-today-btn" class="secondary">Today</button>
+          <button id="activity-copy-btn">Copy as text</button>
+        </div>
+      </div>
+      <form id="activity-note-form" class="activity-note-form">
+        <input type="text" id="activity-note-input" placeholder="Add a note not tied to any task..." autocomplete="off" />
+        <button type="submit">Add note</button>
+      </form>
+      <div id="activity-list" class="task-list"></div>
+    </section>
+
+    <section id="tab-pomodoro" class="tab-panel">
+      <div class="pomodoro-box">
+        <label class="pomo-task-label" for="pomo-task-select">Working on</label>
+        <select id="pomo-task-select">
+          <option value="">Select a task...</option>
+        </select>
+        <div class="pomodoro-mode" id="pomo-mode">Focus</div>
+        <div class="pomodoro-clock" id="pomo-clock">25:00</div>
+        <div class="pomodoro-controls">
+          <button id="pomo-start" class="pomo-icon-btn pomo-start-btn" title="Start" aria-label="Start">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+          </button>
+          <button id="pomo-pause" class="pomo-icon-btn" disabled title="Pause" aria-label="Pause">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"></path></svg>
+          </button>
+          <button id="pomo-skip" class="pomo-icon-btn" title="Skip to next stage" aria-label="Skip to next stage">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><rect x="17" y="4" width="2.5" height="16"></rect></svg>
+          </button>
+          <button id="pomo-reset" class="pomo-icon-btn" title="Reset" aria-label="Reset">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="pomodoro-stats">Completed focus sessions today: <span id="pomo-count">0</span></div>
+      </div>
+    </section>
+
+    <section id="tab-settings" class="tab-panel">
+      <div class="settings-block">
+        <h2>Reminders</h2>
+        <p class="hint">Get a notification at each of these times, every day, to log your work.</p>
+        <div id="reminder-list" class="reminder-list"></div>
+        <form id="reminder-add-form">
+          <input type="time" id="reminder-time-input" required />
+          <button type="submit">Add reminder</button>
+        </form>
+      </div>
+
+      <div class="settings-block">
+        <h2>Startup</h2>
+        <label class="checkbox-row">
+          <input type="checkbox" id="login-item-toggle" />
+          Launch Work Tracker automatically when I log into Windows
+        </label>
+      </div>
+
+      <div class="settings-block">
+        <h2>Pomodoro timing</h2>
+        <div class="pomodoro-settings">
+          <label>Focus (min) <input type="number" id="pomo-focus-min" min="1" max="120" value="25" /></label>
+          <label>Short break (min) <input type="number" id="pomo-short-min" min="1" max="60" value="5" /></label>
+          <label>Long break (min) <input type="number" id="pomo-long-min" min="1" max="60" value="15" /></label>
+          <label>Sessions before long break <input type="number" id="pomo-cycle" min="1" max="12" value="4" /></label>
+          <label>Reset to Focus daily at <input type="time" id="pomo-reset-time" value="00:00" /></label>
+        </div>
+        <p class="hint">If you leave a break sitting unstarted past this time each day, opening Pomodoro will show Focus instead of picking up yesterday's break.</p>
+      </div>
+
+      <div class="settings-block">
+        <h2>Task types</h2>
+        <p class="hint">Shown in the type dropdown, in this order.</p>
+        <div id="config-taskTypes-list" class="config-list"></div>
+        <form class="config-add-form" data-config="taskTypes">
+          <input type="text" class="config-add-input" placeholder="New type name" autocomplete="off" required />
+          <button type="submit">Add</button>
+        </form>
+      </div>
+
+      <div class="settings-block">
+        <h2>Priorities</h2>
+        <p class="hint">Order matters — tasks are sorted with the top priority shown first.</p>
+        <div id="config-priorities-list" class="config-list"></div>
+        <form class="config-add-form" data-config="priorities">
+          <input type="text" class="config-add-input" placeholder="New priority name" autocomplete="off" required />
+          <button type="submit">Add</button>
+        </form>
+      </div>
+
+      <div class="settings-block">
+        <h2>Data</h2>
+        <p class="hint">Export everything (tasks, comments, pomodoro history, settings) as a JSON file, or wipe the database to start fresh.</p>
+        <div class="data-actions">
+          <button id="export-data-btn">Export data (JSON)</button>
+          <button id="reset-data-btn" class="danger">Reset database...</button>
+        </div>
+        <div id="data-action-status" class="hint"></div>
+      </div>
+
+    </section>
+
+    <section id="tab-task-detail" class="tab-panel">
+      <div class="panel-head">
+        <button id="detail-back" class="secondary">&laquo; Back</button>
+      </div>
+      <div class="task-detail-box">
+        <div class="detail-badges">
+          <span id="detail-type-badge" class="type-badge"></span>
+          <span id="detail-priority-badge" class="priority-badge"></span>
+        </div>
+        <textarea id="detail-text" class="detail-text-input" rows="2"></textarea>
+        <div class="detail-fields">
+          <label>Type
+            <select id="detail-type"></select>
+          </label>
+          <label>Priority
+            <select id="detail-priority"></select>
+          </label>
+          <label>Status
+            <select id="detail-status"></select>
+          </label>
+          <label>Ticket / project ref
+            <input type="text" id="detail-ref" autocomplete="off" />
+          </label>
+          <label class="deadline-field">Deadline
+            <span class="deadline-inputs">
+              <input type="date" id="detail-due-date" />
+              <input type="time" id="detail-due-time" title="Optional; blank = end of day" />
+              <button type="button" id="detail-due-clear" class="secondary" title="Clear deadline">&times;</button>
+            </span>
+          </label>
+        </div>
+        <div class="detail-meta">
+          <span id="detail-created"></span>
+        </div>
+        <div class="detail-stats">
+          <div class="stat-tile">
+            <div class="stat-value" id="detail-pomo-count">0</div>
+            <div class="stat-label">Pomodoro sessions</div>
+          </div>
+          <div class="stat-tile">
+            <div class="stat-value" id="detail-time-worked">0m</div>
+            <div class="stat-label">Time worked</div>
+          </div>
+        </div>
+
+        <div class="reminders-block">
+          <h3>Reminders</h3>
+          <div id="task-reminder-list" class="task-reminder-list"></div>
+          <button type="button" id="tr-open-modal">+ Add reminder</button>
+        </div>
+
+        <div id="reminder-modal" class="modal-backdrop" hidden>
+          <form id="task-reminder-form" class="modal-box" role="dialog" aria-modal="true" aria-labelledby="tr-modal-title">
+            <h3 id="tr-modal-title">Add reminder</h3>
+            <label class="modal-field">Type
+              <select id="tr-kind">
+                <option value="absolute">At a date &amp; time</option>
+                <option value="before_deadline">Before the deadline</option>
+                <option value="recurring">Repeating</option>
+                <option value="nag">Nag until done</option>
+              </select>
+            </label>
+
+            <div data-kind="absolute" class="modal-group">
+              <label class="modal-field">Date &amp; time
+                <input type="datetime-local" id="tr-at" />
+              </label>
+            </div>
+
+            <div data-kind="before_deadline" class="modal-group" hidden>
+              <label class="modal-field">How long before the deadline
+                <span class="modal-row">
+                  <input type="number" id="tr-offset" min="1" value="1" />
+                  <select id="tr-offset-unit">
+                    <option value="1">minutes</option>
+                    <option value="60" selected>hours</option>
+                    <option value="1440">days</option>
+                  </select>
+                </span>
+              </label>
+            </div>
+
+            <div data-kind="recurring" class="modal-group" hidden>
+              <label class="modal-field">Repeat
+                <span class="modal-row">
+                  <select id="tr-every">
+                    <option value="daily">Every day</option>
+                    <option value="weekdays">Weekdays</option>
+                    <option value="weekly">Every week</option>
+                    <option value="interval">Every N days</option>
+                  </select>
+                  <select id="tr-weekday" hidden>
+                    <option value="1">Mon</option><option value="2">Tue</option><option value="3">Wed</option>
+                    <option value="4">Thu</option><option value="5">Fri</option><option value="6">Sat</option><option value="0">Sun</option>
+                  </select>
+                  <input type="number" id="tr-n" min="1" value="2" hidden title="Every N days" />
+                </span>
+              </label>
+              <label class="modal-field">At
+                <input type="time" id="tr-time" value="09:00" />
+              </label>
+              <label class="modal-field">Until (optional)
+                <input type="date" id="tr-until" />
+              </label>
+            </div>
+
+            <div data-kind="nag" class="modal-group" hidden>
+              <label class="modal-field">Repeat every (minutes)
+                <input type="number" id="tr-nag-min" min="1" value="30" />
+              </label>
+              <div class="muted-note">Keeps reminding until the task is marked Done or you pause/remove this reminder.</div>
+            </div>
+
+            <div id="tr-error" class="modal-error" hidden></div>
+            <div class="modal-actions">
+              <button type="button" id="tr-cancel" class="secondary">Cancel</button>
+              <button type="submit">Add reminder</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="comments-block">
+          <h3>Comments</h3>
+          <form id="comment-add-form">
+            <div id="comment-editor" class="comment-editor"></div>
+            <button type="submit">Add comment</button>
+          </form>
+          <div id="comment-list" class="comment-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-search" class="tab-panel">
+      <div class="panel-head">
+        <button id="search-back" class="secondary">&laquo; Back</button>
+      </div>
+      <div class="search-page-box">
+        <input type="text" id="search-page-input" class="search-large-input" placeholder="Search all tasks..." autocomplete="off" />
+        <div class="search-controls-row">
+          <button id="search-filters-btn" class="secondary">Filters</button>
+          <select id="search-sort-select">
+            <option value="date-desc">Newest first</option>
+            <option value="date-asc">Oldest first</option>
+            <option value="priority">Priority</option>
+            <option value="type">Type</option>
+          </select>
+        </div>
+        <div id="search-filters-panel" class="search-filters-panel" hidden>
+          <div class="filter-group">
+            <h4>Type</h4>
+            <div id="search-filter-taskTypes" class="filter-checkboxes"></div>
+          </div>
+          <div class="filter-group">
+            <h4>Priority</h4>
+            <div id="search-filter-priorities" class="filter-checkboxes"></div>
+          </div>
+          <div class="filter-group">
+            <h4>Status</h4>
+            <div id="search-filter-statuses" class="filter-checkboxes"></div>
+          </div>
+        </div>
+        <div id="search-result-count" class="hint"></div>
+        <div id="search-page-results" class="task-list"></div>
+      </div>
+    </section>
+
+    <section id="tab-recyclebin" class="tab-panel">
+      <div class="panel-head">
+        <button id="recyclebin-back" class="secondary">&laquo; Back</button>
+        <h2>Recycle Bin <span id="recyclebin-count-label" class="day-summary"></span></h2>
+      </div>
+      <div id="recyclebin-list" class="task-list"></div>
+    </section>
+  </main>
+
+  <script src="vendor/quill/quill.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

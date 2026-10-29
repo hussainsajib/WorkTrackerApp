@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Build output and the local portable copy
+dist/
+app/
+out/
+
+# Personal data: the live DB lives in %APPDATA%\work-tracker, but guard
+# against any copy/export ending up in the repo
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+work-tracker-export*.json
+*-export.json
+*.bak
+
+# Secrets / local config
+.env
+.env.*
+*.pem
+*.key
+
+# Personal planning notes (career context)
+work-tracker-spec.md
+
+# Local Claude Code state (keep CLAUDE.md, ignore personal settings)
+.claude/settings.local.json
+.claude/
+
+# Logs and caches
+*.log
+npm-debug.log*
+
+# OS / editor
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,1015 @@
+:root {
+  --bg: #f5f6f8;
+  --panel-bg: #ffffff;
+  --text: #1c1f26;
+  --muted: #6b7280;
+  --border: #e2e4e9;
+  --accent: #2f6fed;
+  --accent-contrast: #ffffff;
+  --ticket: #2f6fed;
+  --infra: #7c3aed;
+  --adhoc: #ea8a1f;
+  --done: #22a35a;
+  --blocked: #d64545;
+  --danger: #d64545;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16181d;
+    --panel-bg: #1f232b;
+    --text: #e8eaed;
+    --muted: #9aa0ab;
+    --border: #2c313a;
+    --accent: #5b8def;
+    --accent-contrast: #0d1117;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 14px 20px 0 20px;
+}
+
+.header-icons {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  padding: 8px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.app-header h1 {
+  font-size: 18px;
+  margin: 0;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-logo {
+  width: 22px;
+  height: 22px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tab-btn.active {
+  background: var(--panel-bg);
+  color: var(--text);
+}
+
+.quick-add {
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px;
+}
+
+#quick-add-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* One row: the description takes all spare width (and is larger); the other
+   fields stay compact. Wraps only if the window gets very narrow. */
+#quick-add-form { align-items: stretch; flex-wrap: nowrap; }
+#quick-add-form button[type="submit"] { flex: 0 0 auto; }
+#quick-add-form input[type="date"] { width: 130px; }
+#quick-add-form input[type="time"] { width: 100px; }
+
+#qa-text {
+  flex: 1 1 auto;
+  min-width: 120px;
+  font-size: 15px;
+  padding: 10px 12px;
+}
+
+#qa-ref {
+  width: 110px;
+  flex: 0 0 auto;
+}
+
+#quick-add-form select { flex: 0 0 auto; max-width: 110px; }
+
+input, select, button, textarea {
+  font-family: inherit;
+  font-size: 13px;
+}
+
+input[type="text"], input[type="time"], input[type="number"],
+input[type="date"], input[type="datetime-local"], select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--text);
+  color-scheme: light dark; /* native pickers/calendar popups follow the theme */
+}
+
+input[type="date"], input[type="datetime-local"], input[type="time"] {
+  min-height: 34px;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+
+button {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+button.secondary {
+  background: var(--border);
+  color: var(--text);
+}
+
+main {
+  padding: 16px 20px 40px 20px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.panel-head h2 {
+  font-size: 15px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.week-controls { display: flex; gap: 6px; }
+
+.day-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.day-nav h2 {
+  font-size: 15px;
+  color: var(--muted);
+  margin: 0;
+  min-width: 180px;
+  text-align: center;
+}
+
+.activity-note-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.activity-note-form input {
+  flex: 1;
+}
+
+.activity-task-group {
+  margin-bottom: 20px;
+}
+
+.activity-task-group h3 {
+  font-size: 14px;
+  margin: 0 0 8px 0;
+}
+
+.activity-task-link {
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.activity-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.activity-entry-row {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.activity-entry-time {
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 130px;
+  flex-shrink: 0;
+}
+
+.activity-entry-detail {
+  flex: 1;
+}
+
+.activity-entry-edit {
+  flex: 1;
+}
+
+.activity-entry-row .activity-entry-btn {
+  width: 26px;
+  height: 26px;
+  padding: 4px;
+  align-self: center;
+  flex-shrink: 0;
+}
+.activity-entry-row .activity-entry-btn svg { width: 100%; height: 100%; }
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+
+.task-row:hover {
+  border-color: var(--accent);
+}
+
+.task-row.static {
+  cursor: default;
+}
+
+.task-row.static:hover {
+  border-color: var(--border);
+}
+
+.type-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: white;
+  white-space: nowrap;
+  background: var(--muted);
+}
+
+.type-badge.Ticket { background: var(--ticket); }
+.type-badge.Infra { background: var(--infra); }
+.type-badge.Ad-hoc { background: var(--adhoc); }
+
+.priority-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+}
+
+.priority-badge.Highest { color: white; background: var(--blocked); border-color: var(--blocked); }
+.priority-badge.High { color: var(--adhoc); border-color: var(--adhoc); }
+.priority-badge.Low { color: var(--muted); }
+.priority-badge.Neutral { display: none; }
+
+/* Compact color-only priority indicator used in task rows (daily/weekly/search) */
+.priority-dot {
+  width: 10px;
+  height: 10px;
+  min-width: 10px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.priority-dot.Highest { background: var(--blocked); }
+.priority-dot.High { background: var(--adhoc); }
+.priority-dot.Low { background: var(--muted); }
+
+.task-row .task-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-row .task-text {
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.task-row .task-meta {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.task-row select.status-select {
+  font-weight: 600;
+}
+
+.status-select.done-status { color: var(--done); }
+.status-select.blocked-status { color: var(--blocked); }
+
+/* Swipe-to-delete: the row sits above a clipped red panel that's revealed as
+   the row translates left; dragging past a threshold and releasing deletes. */
+.task-row-wrapper {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.task-row-wrapper .task-row {
+  border-radius: 0;
+}
+
+/* Starts at width:0 (truly zero pixels painted, not just clipped) and is
+   grown in JS in lockstep with the drag distance — a full-size panel merely
+   clipped behind the row left a hairline of red visible through sub-pixel
+   anti-aliasing right at the row's edge even when idle. */
+.task-row-swipe-bg {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 0;
+  background: var(--danger);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 20px;
+  overflow: hidden;
+}
+
+.task-row-swipe-bg svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Generic small icon-only row action button (e.g. the To Do page's
+   quick-start-pomodoro button) */
+.row-action-btn {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  color: var(--muted);
+  flex: none;
+}
+
+.row-action-btn svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.row-action-btn:hover,
+.row-action-btn:focus-visible {
+  background: var(--bg);
+  color: var(--accent);
+}
+
+.empty-state {
+  color: var(--muted);
+  padding: 24px;
+  text-align: center;
+  background: var(--panel-bg);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+.day-group {
+  margin-bottom: 20px;
+}
+
+.day-group h3 {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 8px 0;
+}
+
+.day-summary {
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: 8px;
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 24px 0 20px 0;
+}
+
+.panel-head.blocked-head h2 {
+  color: var(--blocked);
+}
+
+/* Pomodoro */
+.pomodoro-box {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  text-align: center;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.pomo-task-label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  text-align: left;
+}
+
+#pomo-task-select {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.pomodoro-mode {
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.pomodoro-clock {
+  font-size: 64px;
+  font-weight: 700;
+  margin: 12px 0 20px 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.pomodoro-controls {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.pomo-icon-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: var(--border);
+  color: var(--text);
+}
+
+.pomo-icon-btn.pomo-start-btn {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.pomo-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pomo-icon-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.pomodoro-stats {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.pomodoro-settings {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  text-align: left;
+}
+
+.pomodoro-settings label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Settings */
+.settings-block {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.settings-block h2 {
+  font-size: 14px;
+  margin: 0 0 8px 0;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0 0 12px 0;
+}
+
+.reminder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.reminder-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.reminder-row .reminder-time {
+  font-weight: 600;
+  width: 70px;
+}
+
+.reminder-row .remove-btn {
+  background: none;
+  color: var(--muted);
+  padding: 2px 8px;
+}
+.reminder-row .remove-btn:hover { color: var(--danger); }
+
+#reminder-add-form {
+  display: flex;
+  gap: 8px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+
+/* Configurable lists (task types / priorities / statuses) */
+.config-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.config-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.config-item .config-item-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.config-item button {
+  background: none;
+  color: var(--muted);
+  padding: 2px 8px;
+  font-weight: 400;
+  font-size: 12px;
+}
+.config-item button:hover:not(:disabled) { color: var(--text); }
+.config-item button:disabled { opacity: 0.3; cursor: default; }
+.config-item .config-remove:hover:not(:disabled) { color: var(--danger); }
+
+.config-add-form {
+  display: flex;
+  gap: 8px;
+}
+
+.config-add-input {
+  flex: 1;
+}
+
+/* Data management */
+.data-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+button.danger {
+  background: var(--danger);
+  color: white;
+}
+
+/* Task detail */
+.task-detail-box {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.detail-badges {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.detail-text-input {
+  width: 100%;
+  font-size: 16px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  background: var(--bg);
+  color: var(--text);
+  resize: vertical;
+  margin-bottom: 14px;
+}
+
+.detail-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.detail-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.detail-fields select,
+.detail-fields input {
+  width: 100%;
+}
+
+.detail-meta {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+
+.detail-stats {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stat-tile {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.comments-block {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+
+.comments-block h3 {
+  font-size: 14px;
+  margin: 0 0 10px 0;
+}
+
+#comment-add-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.comment-editor {
+  width: 100%;
+}
+
+/* Quill inserts the toolbar as a sibling BEFORE the element it's attached
+   to (#comment-editor), not as a descendant of it — so these are scoped to
+   the form that contains both, not to .comment-editor itself. */
+#comment-add-form .ql-toolbar.ql-snow {
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background: var(--bg);
+}
+
+#comment-add-form .ql-container.ql-snow {
+  border: 1px solid var(--border);
+  border-radius: 0 0 6px 6px;
+  background: var(--bg);
+  font-family: inherit;
+  font-size: 13px;
+  min-height: 80px;
+}
+
+#comment-add-form .ql-editor.ql-blank::before {
+  color: var(--muted);
+  font-style: normal;
+}
+
+#comment-add-form .ql-editor {
+  color: var(--text);
+}
+
+#comment-add-form .ql-snow .ql-stroke {
+  stroke: var(--muted);
+}
+
+#comment-add-form .ql-snow .ql-fill {
+  fill: var(--muted);
+}
+
+#comment-add-form .ql-snow .ql-picker {
+  color: var(--muted);
+}
+
+#comment-add-form .ql-snow.ql-toolbar button:hover .ql-stroke,
+#comment-add-form .ql-snow.ql-toolbar button.ql-active .ql-stroke {
+  stroke: var(--accent);
+}
+
+#comment-add-form .ql-snow.ql-toolbar button:hover .ql-fill,
+#comment-add-form .ql-snow.ql-toolbar button.ql-active .ql-fill {
+  fill: var(--accent);
+}
+
+/* Quill's picker dropdowns (color/list) render as floating panels — keep
+   them readable in dark mode too, since quill.snow.css hardcodes a white
+   background otherwise. */
+#comment-add-form .ql-snow .ql-picker-options {
+  background: var(--panel-bg);
+  border-color: var(--border) !important;
+}
+
+#comment-add-form .ql-snow .ql-picker-label {
+  border: none;
+}
+
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comment-row {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.comment-row .comment-time {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.comment-row .comment-text {
+  word-break: break-word;
+}
+
+.comment-row .comment-text p {
+  margin: 0 0 6px 0;
+}
+
+.comment-row .comment-text p:last-child {
+  margin-bottom: 0;
+}
+
+.comment-row .comment-text ul,
+.comment-row .comment-text ol {
+  margin: 4px 0;
+  padding-left: 24px;
+}
+
+.comment-row .comment-text a {
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.comment-row .comment-remove {
+  background: none;
+  color: var(--muted);
+  padding: 0 4px;
+  font-weight: 400;
+  font-size: 11px;
+}
+
+/* Search page */
+.search-page-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.search-large-input {
+  width: 100%;
+  font-size: 18px;
+  padding: 14px 16px;
+}
+
+.search-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-controls-row select {
+  margin-left: auto;
+}
+
+.search-filters-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.filter-group h4 {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.filter-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-checkboxes label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.comment-row .comment-remove:hover { color: var(--danger); }
+
+/* ---------- Deadlines & task reminders ---------- */
+#quick-add-form input[type="date"],
+#quick-add-form input[type="time"] { flex: 0 0 auto; }
+
+.task-due { font-size: 12px; margin-top: 2px; color: var(--muted); }
+.task-due.due-today { color: var(--adhoc); font-weight: 600; }
+.task-due.overdue { color: var(--danger); font-weight: 600; }
+
+/* Deadline spans two grid columns so the date + time pickers aren't squeezed. */
+.detail-fields .deadline-field { grid-column: span 2; }
+.deadline-inputs { display: flex; gap: 8px; align-items: stretch; }
+.deadline-inputs input[type="date"] { flex: 1 1 150px; min-width: 150px; width: auto; }
+.deadline-inputs input[type="time"] { flex: 0 0 120px; width: 120px; }
+.deadline-inputs button { flex: 0 0 auto; }
+
+.reminders-block { margin: 16px 0; }
+.reminders-block h3 { margin: 0 0 8px; }
+.reminders-block > button { margin-top: 10px; }
+.muted-note { color: var(--muted); font-size: 12px; margin: 4px 0; }
+.task-reminder-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0; border-bottom: 1px solid var(--border);
+}
+.task-reminder-info { flex: 1; min-width: 0; }
+.task-reminder-row .icon-btn { width: 28px; height: 28px; padding: 4px; }
+.task-reminder-row .icon-btn svg { width: 100%; height: 100%; }
+
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.modal-backdrop[hidden] { display: none; }
+.modal-box {
+  background: var(--panel-bg); color: var(--text);
+  border: 1px solid var(--border); border-radius: 10px;
+  width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto;
+  padding: 18px 20px; display: flex; flex-direction: column; gap: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+.modal-box h3 { margin: 0; }
+.modal-group { display: flex; flex-direction: column; gap: 12px; }
+.modal-group[hidden] { display: none; }
+.modal-field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.modal-field input, .modal-field select { width: 100%; box-sizing: border-box; }
+.modal-row { display: flex; gap: 8px; }
+.modal-row input, .modal-row select { flex: 1; min-width: 0; }
+.modal-error { color: var(--danger); font-size: 12px; }
+.modal-error[hidden] { display: none; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+
+.reminder-banner {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  padding: 10px 20px; background: var(--accent); color: var(--accent-contrast); font-weight: 600;
+}
+.reminder-banner[hidden] { display: none; }
+.reminder-banner span { flex: 1; min-width: 160px; }
