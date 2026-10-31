@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { openDatabase, TaskStore, CommentStore, PomodoroStore, ActivityStore, ReminderStore, TaskReminderStore, SettingsStore, ConfigStore, todayStr, localDayRangeIso } = require('./src/db');
 const { ReminderScheduler } = require('./src/reminders');
+const { DB_FILE_NAME, defaultDbPath, resolveDbPath, setCustomPath, validateDbFile } = require('./src/dbLocation');
 
 // Without this, Windows falls back to Electron's default AppUserModelID
 // ("electron.app.Electron"), which shows up as the notification popup's
@@ -19,6 +20,7 @@ let tray = null;
 let isQuitting = false;
 let scheduler = null;
 
+let activeDbPath = null;
 let db, tasks, comments, pomodoro, activity, reminders, taskReminders, settings, config;
 
 function formatMinutes(totalSeconds) {
@@ -344,6 +346,79 @@ function setupIpc() {
     return { ok: true, path: result.filePath };
   });
 
+  // The new location only takes effect on the next launch, so every switch
+  // writes the pointer file and relaunches. The old database file is left
+  // untouched as a backup.
+  function switchDatabase(newPath) {
+    setCustomPath(app.getPath('userData'), newPath);
+    app.relaunch();
+    app.quit();
+  }
+
+  const samePath = (a, b) => path.resolve(a).toLowerCase() === path.resolve(b).toLowerCase();
+
+  ipcMain.handle('dbLocation:get', () => {
+    const defaultPath = defaultDbPath(app.getPath('userData'));
+    return { path: activeDbPath, defaultPath, isDefault: samePath(activeDbPath, defaultPath) };
+  });
+
+  // Copy the current database into a chosen folder and switch to the copy.
+  ipcMain.handle('dbLocation:move', async () => {
+    const pick = await dialog.showOpenDialog(mainWindow, {
+      title: 'Choose a folder for the Work Tracker database',
+      properties: ['openDirectory', 'createDirectory'],
+    });
+    if (pick.canceled || !pick.filePaths[0]) return { ok: false, canceled: true };
+
+    const target = path.join(pick.filePaths[0], DB_FILE_NAME);
+    if (samePath(target, activeDbPath)) return { ok: false, error: 'The database is already in that folder.' };
+    if (fs.existsSync(target)) {
+      return { ok: false, error: `A database already exists at ${target}. Use "Use existing database..." to switch to it, or pick another folder.` };
+    }
+    try {
+      await db.backup(target); // consistent copy even in WAL mode
+    } catch (err) {
+      return { ok: false, error: `Copy failed: ${err.message}` };
+    }
+    switchDatabase(target);
+    return { ok: true };
+  });
+
+  // Point the app at an existing database file (import / restore / move between machines).
+  ipcMain.handle('dbLocation:useExisting', async () => {
+    const pick = await dialog.showOpenDialog(mainWindow, {
+      title: 'Choose an existing Work Tracker database',
+      properties: ['openFile'],
+      filters: [{ name: 'SQLite database', extensions: ['db', 'sqlite', 'sqlite3'] }, { name: 'All files', extensions: ['*'] }],
+    });
+    if (pick.canceled || !pick.filePaths[0]) return { ok: false, canceled: true };
+
+    const file = pick.filePaths[0];
+    if (samePath(file, activeDbPath)) return { ok: false, error: 'That is the database already in use.' };
+    const check = validateDbFile(file);
+    if (!check.ok) return check;
+
+    const confirm = await dialog.showMessageBox(mainWindow, {
+      type: 'warning',
+      buttons: ['Switch and restart', 'Cancel'],
+      defaultId: 1,
+      cancelId: 1,
+      message: 'Switch to this database?',
+      detail: `${file}\n\nThe app will use this file directly, and upgrade it to the current format if it is from an older version. Your current data stays at ${activeDbPath} and is not merged.`,
+    });
+    if (confirm.response !== 0) return { ok: false, canceled: true };
+
+    switchDatabase(file);
+    return { ok: true };
+  });
+
+  ipcMain.handle('dbLocation:useDefault', () => {
+    const defaultPath = defaultDbPath(app.getPath('userData'));
+    if (samePath(activeDbPath, defaultPath)) return { ok: false, error: 'Already using the default location.' };
+    switchDatabase(null);
+    return { ok: true };
+  });
+
   ipcMain.handle('data:reset', (_e, { alsoResetSettings }) => {
     db.prepare('DELETE FROM tasks').run(); // cascades to comments + pomodoro_sessions
     // activity_log doesn't cascade from tasks (task_id is ON DELETE SET NULL,
@@ -367,7 +442,9 @@ app.on('second-instance', () => {
 });
 
 app.whenReady().then(() => {
-  db = openDatabase(app.getPath('userData'));
+  const resolved = resolveDbPath(app.getPath('userData'));
+  activeDbPath = resolved.path;
+  db = openDatabase(activeDbPath);
   tasks = new TaskStore(db);
   comments = new CommentStore(db);
   pomodoro = new PomodoroStore(db);
@@ -380,6 +457,7 @@ app.whenReady().then(() => {
   setupIpc();
   createWindow();
   createTray();
+  if (resolved.warning) dialog.showErrorBox('Database not found', resolved.warning);
 
   scheduler = new ReminderScheduler({
     reminderStore: reminders,

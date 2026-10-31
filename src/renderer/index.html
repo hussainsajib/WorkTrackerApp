@@ -190,6 +190,18 @@
       </div>
 
       <div class="settings-block">
+        <h2>Database location</h2>
+        <p class="hint">Your tasks live in a single SQLite file. Move it to another folder, or switch to an existing database file to import or restore it. The app restarts after a change, and the old file is left in place as a backup. Avoid cloud-synced folders (OneDrive, Dropbox): syncing a database that is open can corrupt it.</p>
+        <div id="db-path" class="db-path"></div>
+        <div class="data-actions">
+          <button id="db-move-btn">Move to folder...</button>
+          <button id="db-existing-btn">Use existing database...</button>
+          <button id="db-default-btn" class="secondary">Use default location</button>
+        </div>
+        <div id="db-location-status" class="hint"></div>
+      </div>
+
+      <div class="settings-block">
         <h2>Data</h2>
         <p class="hint">Export everything (tasks, comments, pomodoro history, settings) as a JSON file, or wipe the database to start fresh.</p>
         <div class="data-actions">

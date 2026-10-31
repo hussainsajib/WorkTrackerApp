@@ -64,6 +64,12 @@ contextBridge.exposeInMainWorld('api', {
     export: () => ipcRenderer.invoke('data:export'),
     reset: (alsoResetSettings) => ipcRenderer.invoke('data:reset', { alsoResetSettings }),
   },
+  dbLocation: {
+    get: () => ipcRenderer.invoke('dbLocation:get'),
+    move: () => ipcRenderer.invoke('dbLocation:move'),
+    useExisting: () => ipcRenderer.invoke('dbLocation:useExisting'),
+    useDefault: () => ipcRenderer.invoke('dbLocation:useDefault'),
+  },
   shell: {
     openExternal: (url) => ipcRenderer.invoke('shell:openExternal', { url }),
   },

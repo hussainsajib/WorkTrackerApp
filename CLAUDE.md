@@ -18,11 +18,14 @@ No test suite or linter is configured.
 
 The single-file portable exe is unreliable on this machine (self-extracts to a random `%TEMP%` folder on every launch and crashes on an AV file-lock race). The working distributable is the **`dist\win-unpacked` folder copied to `app\`** (gitignored; run `app\WorkTracker.exe`). To update: close the running app, then re-copy `dist\win-unpacked\*` over `app\`. The org blocks installing software, so keep everything portable/no-admin.
 
-**Build + deploy steps** (run from the project root, with the app closed so `WorkTracker.exe` isn't locked):
+**Build + deploy steps** (run manually from the project root in PowerShell; there is no automatic deploy hook):
 
-1. `npm run dist`
-2. `Copy-Item .\dist\win-unpacked\* .\app -Recurse -Force` (PowerShell)
-3. Launch `app\WorkTracker.exe`.
+1. Fully quit the app. It hides to the tray and holds a single-instance lock, so closing the window isn't enough: right-click the tray icon → Quit, or `Get-Process WorkTracker -ErrorAction SilentlyContinue | Stop-Process`. Otherwise the copy fails or the old version keeps showing.
+2. `npm run dist`
+3. `Copy-Item .\dist\win-unpacked\* .\app -Recurse -Force`
+4. Launch `app\WorkTracker.exe`.
+
+Edits to `src/renderer/*` and `main.js` only reach `app\` after steps 2-3. `npm start` runs the working tree directly (also on the real DB, and the single-instance lock applies there too).
 
 If a session's strict sandbox blocks shell commands, Claude can't run these; give the user the commands (or `! npm run dist`) to run themselves.
 
@@ -38,6 +41,7 @@ If a session's strict sandbox blocks shell commands, Claude can't run these; giv
 - `main.js` — Electron main process: window, tray (app hides to tray rather than quitting; single-instance lock), all `ipcMain.handle` handlers (namespaced `tasks:*`, `comments:*`, `pomodoro:*`, `activity:*`, `reminders:*`, `settings:*`, `config:*`, `data:export|reset`, `notify:show`, `shell:openExternal`), and DB/store wiring in `app.whenReady`.
 - `preload.js` — `contextBridge` exposing `window.api.*`; mirrors the IPC channels. `contextIsolation` on, `nodeIntegration` off. Adding a feature = handler in `main.js` + wrapper in `preload.js` + call from the renderer.
 - `src/db.js` — schema, migrations, and store classes (`TaskStore`, `CommentStore`, `PomodoroStore`, `ActivityStore`, `ReminderStore`, `SettingsStore`, `ConfigStore`). Schema versioning uses a `getSchemaVersion`/`setSchemaVersion` chain of `if (version < N)` blocks (currently v4); add new migrations to the end of that chain. Task types/priorities/statuses are user-configurable and stored via `ConfigStore` on top of `SettingsStore` (no CHECK constraints). Tasks are soft-deleted (`deleted_at`). `activity_log` is an append-only record of task events feeding the Activity tab.
+- `src/dbLocation.js` — DB file location. A pointer file `db-location.json` in `userData` (not the DB itself) holds the user's chosen path; absent = default `userData\work-tracker.db`. Missing custom file falls back to the default with an error box (never silently creates an empty DB). Settings → "Database location" uses `dbLocation:*` IPC: move (copy via `db.backup`), use existing file (validated for a `tasks` table), use default. Every switch writes the pointer and relaunches; the old file is left as a backup.
 - `src/reminders.js` — `ReminderScheduler` polls every 30s and fires at most once per HH:MM slot.
 - `src/renderer/` — `index.html`, `styles.css`, and a single large `app.js` (tabs: To-do, Tasks, Activity, task detail, comments with Quill rich-text editor vendored under `vendor/quill`). Comment HTML is sanitized in `sanitizeCommentHtml`.
 - `scripts/generate-icons.js` — generates assets in `assets/`.
@@ -45,6 +49,6 @@ If a session's strict sandbox blocks shell commands, Claude can't run these; giv
 ## Gotchas
 
 - **Login item path:** `app.setLoginItemSettings` must use `process.env.PORTABLE_EXECUTABLE_FILE || process.execPath` (see `settings:setLoginItem` in `main.js`). `process.execPath` is an ephemeral temp path in the portable build. Preserve that fallback.
-- **Real user data in dev:** `userData` resolves to `%APPDATA%\work-tracker\work-tracker.db` (from package.json `name`, not `productName`), which is the user's live production data. There is no test isolation. Any automated/scripted launch (e.g. Playwright `_electron.launch`) MUST pass `--user-data-dir=<temp-dir>`, or writes will pollute the real DB.
+- **Real user data in dev:** unless `db-location.json` redirects it, `userData` resolves to `%APPDATA%\work-tracker\work-tracker.db` (from package.json `name`, not `productName`), which is the user's live production data. There is no test isolation. Any automated/scripted launch (e.g. Playwright `_electron.launch`) MUST pass `--user-data-dir=<temp-dir>`, or writes will pollute the real DB.
 - **Schema migrations that recreate `tasks`:** `comments`/`pomodoro_sessions` reference `tasks` with `ON DELETE CASCADE`. The v2 migration disables `foreign_keys` and swaps via a temp table + DROP + RENAME to avoid cascade-wiping them — follow that pattern for any future table rebuild.
 - Renderer timers must keep running while hidden (pomodoro), hence `backgroundThrottling: false`.

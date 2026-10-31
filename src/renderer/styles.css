@@ -130,7 +130,7 @@ html, body {
   gap: 8px;
 }
 
-/* One row: the description takes all spare width (and is larger); the other
+/* One row: the description takes all spare width; the other
    fields stay compact. Wraps only if the window gets very narrow. */
 #quick-add-form { align-items: stretch; flex-wrap: nowrap; }
 #quick-add-form button[type="submit"] { flex: 0 0 auto; }
@@ -140,8 +140,6 @@ html, body {
 #qa-text {
   flex: 1 1 auto;
   min-width: 120px;
-  font-size: 15px;
-  padding: 10px 12px;
 }
 
 #qa-ref {
@@ -686,6 +684,14 @@ main {
 
 .config-add-input {
   flex: 1;
+}
+
+/* Database location */
+.db-path {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12px;
+  word-break: break-all;
+  margin-bottom: 8px;
 }
 
 /* Data management */

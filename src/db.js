@@ -29,9 +29,8 @@ function setSchemaVersion(db, version) {
   `).run(String(version));
 }
 
-function openDatabase(userDataPath) {
-  fs.mkdirSync(userDataPath, { recursive: true });
-  const dbPath = path.join(userDataPath, 'work-tracker.db');
+function openDatabase(dbPath) {
+  fs.mkdirSync(path.dirname(dbPath), { recursive: true });
   const db = new Database(dbPath);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
