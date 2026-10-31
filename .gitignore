@@ -27,7 +27,7 @@ work-tracker-export*.json
 # Personal planning notes (career context)
 work-tracker-spec.md
 
-# Local Claude Code state (keep CLAUDE.md, ignore personal settings)
+# Local Claude Code state (keep AGENTS.md, ignore personal settings)
 .claude/settings.local.json
 .claude/
 

@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI coding agents (Claude Code, Codex, Cursor, etc.) working with code in this repository. Claude Code reads it directly (v2.1.277+) as long as no `CLAUDE.md` exists in this repo or above it, so do not add one: it would hide every `AGENTS.md`, including the per-folder ones under `src/`.
 
 ## What this is
 
@@ -43,8 +43,9 @@ If a session's strict sandbox blocks shell commands, Claude can't run these; giv
 - `src/db.js` — schema, migrations, and store classes (`TaskStore`, `CommentStore`, `PomodoroStore`, `ActivityStore`, `ReminderStore`, `SettingsStore`, `ConfigStore`). Schema versioning uses a `getSchemaVersion`/`setSchemaVersion` chain of `if (version < N)` blocks (currently v4); add new migrations to the end of that chain. Task types/priorities/statuses are user-configurable and stored via `ConfigStore` on top of `SettingsStore` (no CHECK constraints). Tasks are soft-deleted (`deleted_at`). `activity_log` is an append-only record of task events feeding the Activity tab.
 - `src/dbLocation.js` — DB file location. A pointer file `db-location.json` in `userData` (not the DB itself) holds the user's chosen path; absent = default `userData\work-tracker.db`. Missing custom file falls back to the default with an error box (never silently creates an empty DB). Settings → "Database location" uses `dbLocation:*` IPC: move (copy via `db.backup`), use existing file (validated for a `tasks` table), use default. Every switch writes the pointer and relaunches; the old file is left as a backup.
 - `src/reminders.js` — `ReminderScheduler` polls every 30s and fires at most once per HH:MM slot.
-- `src/renderer/` — `index.html`, `styles.css`, and a single large `app.js` (tabs: To-do, Tasks, Activity, task detail, comments with Quill rich-text editor vendored under `vendor/quill`). Comment HTML is sanitized in `sanitizeCommentHtml`.
+- `src/renderer/` — `index.html`, `styles.css`, and `app.js`, a thin ES-module entry (`<script type="module">`) that imports the feature modules under `modules/` and runs `init()`. Folders: `core/` (shared `state`/`CONFIG`, icons, date/format helpers, select helpers), `nav/` (tabs), `tasks/` (task rows, To-do, All tasks, detail, search, recycle bin, quick add), `activity/`, `comments/` (Quill editor vendored under `vendor/quill`, plus `sanitize.js` for comment HTML), `reminders/` (per-task and daily), `pomodoro/`, `settings/` (theme, login item, config lists, DB location, data actions). Mutable cross-module values live on `state` in `core/state.js` (importers can't reassign module bindings); `CONFIG` is mutated in place. Cross-module imports are cyclic by design but only used inside function bodies, so don't call another module's exports at module top level.
 - `scripts/generate-icons.js` — generates assets in `assets/`.
+- Each folder under `src/` has its own `AGENTS.md` with folder-scoped context (purpose, rules, gotchas). Read the one nearest the code you're changing, and keep it in sync when you change that folder's behaviour or structure.
 
 ## Gotchas
 
