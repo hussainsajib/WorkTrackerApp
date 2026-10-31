@@ -2,17 +2,42 @@ name: Build and release
 
 on:
   push:
-    tags: ['v*']
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
+  # Keeps a "release PR" open on main that bumps package.json + CHANGELOG.md from
+  # conventional commits. Merging that PR creates the tag + GitHub Release.
+  release-please:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.rp.outputs.release_created }}
+      tag_name: ${{ steps.rp.outputs.tag_name }}
+    steps:
+      - id: rp
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
   build:
+    needs: release-please
+    # Manual runs always build (dev zip); pushes build only when a release was just cut.
+    # Built here rather than on a tag trigger because tags pushed with GITHUB_TOKEN
+    # don't start other workflows.
+    if: >-
+      always() && (github.event_name == 'workflow_dispatch' ||
+      needs.release-please.outputs.release_created == 'true')
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name || github.ref }}
 
       - uses: actions/setup-node@v4
         with:
@@ -30,17 +55,20 @@ jobs:
       - name: Zip the build
         shell: pwsh
         run: |
-          $name = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME } else { 'dev' }
+          $name = if ($env:TAG) { $env:TAG } else { 'dev' }
           Compress-Archive -Path dist/win-unpacked/* -DestinationPath "WorkTracker-$name-win.zip"
+        env:
+          TAG: ${{ needs.release-please.outputs.tag_name }}
 
       - uses: actions/upload-artifact@v4
         with:
           name: WorkTracker-win
           path: WorkTracker-*-win.zip
 
-      - name: Publish GitHub Release
-        if: github.ref_type == 'tag'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: WorkTracker-*-win.zip
-          generate_release_notes: true
+      - name: Attach zip to GitHub Release
+        if: needs.release-please.outputs.release_created == 'true'
+        shell: pwsh
+        run: gh release upload "$env:TAG" WorkTracker-*-win.zip --clobber
+        env:
+          TAG: ${{ needs.release-please.outputs.tag_name }}
+          GH_TOKEN: ${{ github.token }}

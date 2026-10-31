@@ -1,0 +1,29 @@
+#!/bin/sh
+# Enforces Conventional Commits so release-please can compute version bumps.
+# Enabled by `npm install` (the "prepare" script sets core.hooksPath).
+
+first_line=$(head -n 1 "$1")
+
+# Let git-generated messages through.
+case "$first_line" in
+  Merge\ *|Revert\ *|fixup!\ *|squash!\ *) exit 0 ;;
+esac
+
+pattern='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([^)]+\))?!?: .+'
+
+if ! printf '%s' "$first_line" | grep -Eq "$pattern"; then
+  cat >&2 <<'EOF'
+Commit message does not follow Conventional Commits.
+
+  <type>(optional scope)!: <description>
+
+Types:  feat (minor bump), fix (patch bump), docs, style, refactor,
+        perf, test, build, ci, chore, revert
+Breaking change: add "!" after the type, e.g. "feat!: drop old DB format"
+
+Examples:
+  feat: add snooze to reminders
+  fix(db): avoid cascade delete in tasks migration
+EOF
+  exit 1
+fi
