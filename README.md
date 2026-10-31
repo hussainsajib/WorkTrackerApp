@@ -11,6 +11,14 @@ A personal Windows desktop task tracker built with Electron and SQLite. It runs 
 - **Reminders:** configurable daily and per-task reminders with desktop notifications.
 - **Tray icon and auto-launch:** hides to the system tray and can start on login.
 - **Export/reset:** export all data as JSON or reset the app.
+- **Themes:** match Windows, or force light or dark.
+- **Database location:** move the database to another folder, or switch to an existing database file to import or restore it.
+
+## Download
+
+Get the latest `WorkTracker-vX.Y.Z-win.zip` from the [Releases](../../releases) page, extract it, and run `WorkTracker.exe`. No installer or admin rights are needed.
+
+The build is not yet code-signed, so Windows SmartScreen may show "Windows protected your PC". Right-click the zip, choose **Properties**, tick **Unblock** before extracting, or click **More info → Run anyway**.
 
 ## Requirements
 
@@ -36,7 +44,11 @@ Output goes to `dist\`. The `dist\win-unpacked` folder is a portable, no-install
 
 ## Data
 
-The database is stored at `%APPDATA%\work-tracker\work-tracker.db`. When running in development (`npm start`) this is the same file the packaged app uses, so be careful with test data. To run a scripted or experimental launch against a throwaway database, pass `--user-data-dir=<temp-dir>`.
+The database is stored at `%APPDATA%\work-tracker\work-tracker.db` by default; change it under Settings → Database location. When running in development (`npm start`) this is the same file the packaged app uses, so be careful with test data. To run a scripted or experimental launch against a throwaway database, pass `--user-data-dir=<temp-dir>`.
+
+## Privacy
+
+Work Tracker runs entirely offline. It has no accounts, telemetry or network calls, and it only opens links you click inside comments in your own browser. Your data stays in the local database file.
 
 ## Project layout
 
@@ -45,6 +57,7 @@ The database is stored at `%APPDATA%\work-tracker\work-tracker.db`. When running
 | `main.js` | Electron main process: window, tray, IPC handlers |
 | `preload.js` | `contextBridge` API exposed to the renderer |
 | `src/db.js` | SQLite schema, migrations and data stores |
+| `src/dbLocation.js` | Resolves and switches the database file location |
 | `src/reminders.js` | Reminder scheduler |
 | `src/renderer/` | UI (HTML, CSS, vanilla JS) |
 | `scripts/generate-icons.js` | Generates the icons in `assets/` |
