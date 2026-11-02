@@ -6,7 +6,7 @@
 Behaviour to preserve
 - The countdown is computed from a wall-clock target (`endAt`), not by counting ticks, because renderer timers can be delayed or coalesced while the window is hidden.
 - Phases never auto-start. Every focus or break needs an explicit Start.
-- `focusCount` is display-only and seeded from the database (`syncTodayFocusCount`), so it survives restarts. `cyclePosition` is separate and drives the short/long break alternation; both a completion and a Skip advance it. Skip does not log a session.
+- `focusCount` is display-only and seeded from the database (`syncTodayFocusCount`), so it survives restarts. `cyclePosition` is separate and drives the short/long break alternation; both a completion and a Skip advance it. Skipping a *started* focus stage (running, or paused part-way, with a task selected) counts as a completed session: it bumps `focusCount` and calls `recordSession` with the full planned duration. Skipping an untouched focus stage or a break logs nothing.
 - Starting a focus session marks the task "In progress" (`CONFIG.inProgressStatus`).
 - `checkDayResetForFocus` snaps an unstarted break back to Focus once the configured daily reset time has passed.
 - `cyclePosition` is initialised once in `init()` (`../../app.js`); do not reset it on later tab activations.

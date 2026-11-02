@@ -18,7 +18,7 @@ export const pomodoro = {
   endAt: null,
   // Sessions completed *and logged* today — display-only, seeded from the
   // database (see syncTodayFocusCount) so it survives restarts and never
-  // gets inflated by a Skip (which doesn't log anything).
+  // stays consistent with it (a Skip of a started focus stage also logs one).
   focusCount: 0,
   // Separate from focusCount: drives the short-vs-long break alternation.
   // Incremented by both a real completion and a Skip, since either way a
@@ -266,14 +266,22 @@ export function setupPomodoro() {
     renderPomodoroClock();
   });
 
-  // Ends the current stage immediately without crediting/logging it, and
-  // moves to the next stage without auto-starting it.
-  document.getElementById('pomo-skip').addEventListener('click', () => {
+  // Ends the current stage immediately and moves to the next stage without
+  // auto-starting it. Skipping a focus stage that was actually started (running,
+  // or paused part-way) counts as a completed focus session and is logged
+  // against the selected task, same as a natural completion.
+  document.getElementById('pomo-skip').addEventListener('click', async () => {
+    const wasStartedFocus = pomodoro.mode === 'focus'
+      && pomodoro.selectedTaskId
+      && (pomodoro.running || pomodoro.remaining < pomodoro.sessionDuration);
+    const taskId = pomodoro.selectedTaskId;
+
     clearInterval(pomodoro.timerId);
     pomodoro.running = false;
     pomodoro.endAt = null;
 
     if (pomodoro.mode === 'focus') {
+      if (wasStartedFocus) pomodoro.focusCount += 1;
       pomodoro.cyclePosition += 1;
       const isLongBreak = pomodoro.cyclePosition % pomodoro.settings.cycle === 0;
       pomodoro.mode = isLongBreak ? 'long' : 'short';
@@ -287,6 +295,12 @@ export function setupPomodoro() {
     taskSelect.disabled = false;
     updatePomodoroStartAvailability();
     renderPomodoroClock();
+
+    if (wasStartedFocus) {
+      await window.api.pomodoro.recordSession(taskId, pomodoro.sessionDuration);
+      await refreshAfterTaskChange();
+      if (state.currentDetailTaskId === taskId) await renderTaskDetail();
+    }
   });
 
   const focusInput = document.getElementById('pomo-focus-min');
