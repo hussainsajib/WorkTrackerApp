@@ -349,6 +349,11 @@ class CommentStore {
     return this.db.prepare('SELECT * FROM comments WHERE id = ?').get(info.lastInsertRowid);
   }
 
+  update(id, text) {
+    this.db.prepare('UPDATE comments SET text = ? WHERE id = ?').run(text, id);
+    return this.db.prepare('SELECT * FROM comments WHERE id = ?').get(id);
+  }
+
   remove(id) {
     this.db.prepare('DELETE FROM comments WHERE id = ?').run(id);
   }

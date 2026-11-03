@@ -2,6 +2,7 @@ import { renderCommentContent, sanitizeCommentHtml } from './sanitize.js';
 import { friendlyDateTime } from '../core/format.js';
 import { state } from '../core/state.js';
 import { renderTodo } from '../tasks/todo.js';
+import { EDIT_ICON_SVG, TRASH_ICON_SVG } from '../core/icons.js';
 
 const commentDrafts = new Map(); // taskId -> Quill Delta (unposted comment)
 
@@ -28,13 +29,7 @@ export function ensureCommentEditor() {
     theme: 'snow',
     placeholder: 'Add a comment...',
     modules: {
-      toolbar: [
-        ['bold', 'italic', 'underline'],
-        [{ color: [] }, { background: [] }],
-        [{ list: 'ordered' }, { list: 'bullet' }],
-        ['link'],
-        ['clean'],
-      ],
+      toolbar: COMMENT_TOOLBAR,
     },
   });
 
@@ -76,6 +71,48 @@ export function ensureCommentEditor() {
   }, true);
 }
 
+const COMMENT_TOOLBAR = [
+  ['bold', 'italic', 'underline'],
+  [{ color: [] }, { background: [] }],
+  [{ list: 'ordered' }, { list: 'bullet' }],
+  ['link'],
+  ['clean'],
+];
+
+// Swaps a comment's text for an inline Quill editor with Save/Cancel.
+function startEditComment(c, row, textEl) {
+  const editorBox = document.createElement('div');
+  const editorEl = document.createElement('div');
+  editorEl.className = 'comment-editor';
+  editorBox.appendChild(editorEl);
+  const actions = document.createElement('div');
+  actions.className = 'comment-edit-actions';
+  const save = document.createElement('button');
+  save.type = 'button';
+  save.textContent = 'Save';
+  const cancel = document.createElement('button');
+  cancel.type = 'button';
+  cancel.className = 'secondary';
+  cancel.textContent = 'Cancel';
+  actions.append(save, cancel);
+  editorBox.appendChild(actions);
+  textEl.replaceWith(editorBox);
+  row.classList.add('editing');
+
+  const quill = new Quill(editorEl, { theme: 'snow', modules: { toolbar: COMMENT_TOOLBAR } });
+  const tmp = document.createElement('div');
+  renderCommentContent(tmp, c.text);
+  quill.clipboard.dangerouslyPasteHTML(tmp.innerHTML, 'silent');
+  quill.focus();
+
+  cancel.addEventListener('click', () => renderComments());
+  save.addEventListener('click', async () => {
+    if (quill.getText().trim().length === 0) return;
+    await window.api.comments.update(c.id, sanitizeCommentHtml(quill.root.innerHTML));
+    await renderComments();
+  });
+}
+
 const URL_PATTERN = /(https?:\/\/[^\s]+)/g;
 
 function linkifyPlainText(text) {
@@ -113,20 +150,30 @@ export async function renderComments() {
     timeText.textContent = friendlyDateTime(c.created_at);
     time.appendChild(timeText);
 
-    const remove = document.createElement('button');
-    remove.className = 'comment-remove';
-    remove.textContent = 'Remove';
-    remove.addEventListener('click', async () => {
+    const text = document.createElement('div');
+    text.className = 'comment-text';
+    renderCommentContent(text, c.text);
+
+    const btns = document.createElement('span');
+    btns.className = 'comment-actions';
+    const editBtn = document.createElement('button');
+    editBtn.className = 'secondary icon-btn comment-action-btn';
+    editBtn.title = 'Edit comment';
+    editBtn.innerHTML = EDIT_ICON_SVG;
+    editBtn.addEventListener('click', () => startEditComment(c, row, text));
+    const delBtn = document.createElement('button');
+    delBtn.className = 'secondary icon-btn comment-action-btn';
+    delBtn.title = 'Delete comment';
+    delBtn.innerHTML = TRASH_ICON_SVG;
+    delBtn.addEventListener('click', async () => {
       await window.api.comments.remove(c.id);
       await renderComments();
       await renderTodo();
     });
-    time.appendChild(remove);
+    btns.append(editBtn, delBtn);
+    time.appendChild(btns);
     row.appendChild(time);
 
-    const text = document.createElement('div');
-    text.className = 'comment-text';
-    renderCommentContent(text, c.text);
     row.appendChild(text);
 
     list.appendChild(row);

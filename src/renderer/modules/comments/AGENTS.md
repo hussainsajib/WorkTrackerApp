@@ -3,7 +3,7 @@
 Task comments with a Quill rich-text editor.
 
 - `sanitize.js` — pure, DOM-only HTML sanitizer for comments (`sanitizeCommentHtml`, `renderCommentContent`). Has no imports.
-- `comments.js` — Quill setup, unposted drafts per task, paste-to-linkify, list rendering, Ctrl+Enter to post.
+- `comments.js` — Quill setup, unposted drafts per task, paste-to-linkify, list rendering with edit (inline Quill, `comments:update`) and delete icon buttons (same icons as Activity notes), Ctrl+Enter to post.
 
 Security rules (this is the trust boundary)
 - Comment HTML is sanitized on save and rendered through `renderCommentContent`. Only `P BR STRONG B EM I U S SPAN UL OL LI A` survive; every attribute is stripped except safe `color`/`background-color` on `SPAN` and `http(s):`/`mailto:` hrefs on `A`.

@@ -810,14 +810,14 @@ button.danger {
 /* Quill inserts the toolbar as a sibling BEFORE the element it's attached
    to (#comment-editor), not as a descendant of it — so these are scoped to
    the form that contains both, not to .comment-editor itself. */
-#comment-add-form .ql-toolbar.ql-snow {
+.comments-block .ql-toolbar.ql-snow {
   border: 1px solid var(--border);
   border-bottom: none;
   border-radius: 6px 6px 0 0;
   background: var(--bg);
 }
 
-#comment-add-form .ql-container.ql-snow {
+.comments-block .ql-container.ql-snow {
   border: 1px solid var(--border);
   border-radius: 0 0 6px 6px;
   background: var(--bg);
@@ -826,46 +826,46 @@ button.danger {
   min-height: 80px;
 }
 
-#comment-add-form .ql-editor.ql-blank::before {
+.comments-block .ql-editor.ql-blank::before {
   color: var(--muted);
   font-style: normal;
 }
 
-#comment-add-form .ql-editor {
+.comments-block .ql-editor {
   color: var(--text);
 }
 
-#comment-add-form .ql-snow .ql-stroke {
+.comments-block .ql-snow .ql-stroke {
   stroke: var(--muted);
 }
 
-#comment-add-form .ql-snow .ql-fill {
+.comments-block .ql-snow .ql-fill {
   fill: var(--muted);
 }
 
-#comment-add-form .ql-snow .ql-picker {
+.comments-block .ql-snow .ql-picker {
   color: var(--muted);
 }
 
-#comment-add-form .ql-snow.ql-toolbar button:hover .ql-stroke,
-#comment-add-form .ql-snow.ql-toolbar button.ql-active .ql-stroke {
+.comments-block .ql-snow.ql-toolbar button:hover .ql-stroke,
+.comments-block .ql-snow.ql-toolbar button.ql-active .ql-stroke {
   stroke: var(--accent);
 }
 
-#comment-add-form .ql-snow.ql-toolbar button:hover .ql-fill,
-#comment-add-form .ql-snow.ql-toolbar button.ql-active .ql-fill {
+.comments-block .ql-snow.ql-toolbar button:hover .ql-fill,
+.comments-block .ql-snow.ql-toolbar button.ql-active .ql-fill {
   fill: var(--accent);
 }
 
 /* Quill's picker dropdowns (color/list) render as floating panels — keep
    them readable in dark mode too, since quill.snow.css hardcodes a white
    background otherwise. */
-#comment-add-form .ql-snow .ql-picker-options {
+.comments-block .ql-snow .ql-picker-options {
   background: var(--panel-bg);
   border-color: var(--border) !important;
 }
 
-#comment-add-form .ql-snow .ql-picker-label {
+.comments-block .ql-snow .ql-picker-label {
   border: none;
 }
 
@@ -914,13 +914,10 @@ button.danger {
   cursor: pointer;
 }
 
-.comment-row .comment-remove {
-  background: none;
-  color: var(--muted);
-  padding: 0 4px;
-  font-weight: 400;
-  font-size: 11px;
-}
+.comment-row .comment-actions { display: flex; gap: 4px; }
+.comment-row .comment-action-btn { width: 26px; height: 26px; padding: 4px; }
+.comment-row .comment-action-btn svg { width: 100%; height: 100%; }
+.comment-edit-actions { display: flex; gap: 8px; margin-top: 8px; }
 
 /* Search page */
 .search-page-box {
@@ -975,7 +972,6 @@ button.danger {
   gap: 6px;
   font-size: 13px;
 }
-.comment-row .comment-remove:hover { color: var(--danger); }
 
 /* ---------- Deadlines & task reminders ---------- */
 #quick-add-form input[type="date"],

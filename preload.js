@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('api', {
   comments: {
     list: (taskId) => ipcRenderer.invoke('comments:list', { taskId }),
     add: (taskId, text) => ipcRenderer.invoke('comments:add', { taskId, text }),
+    update: (id, text) => ipcRenderer.invoke('comments:update', { id, text }),
     remove: (id) => ipcRenderer.invoke('comments:remove', { id }),
   },
   pomodoro: {

@@ -205,6 +205,7 @@ function setupIpc() {
     activity.record(taskId, 'comment_added', 'Comment added', task ? task.text : null);
     return result;
   });
+  ipcMain.handle('comments:update', (_e, { id, text }) => comments.update(id, text));
   ipcMain.handle('comments:remove', (_e, { id }) => {
     comments.remove(id);
     return true;
